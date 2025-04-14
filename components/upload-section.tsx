@@ -59,7 +59,7 @@ export function UploadSection() {
       const text = await extractTextFromPDF(file)
 
       // Send API call
-      const response = await fetch("/api/gemini/route", {
+      const response = await fetch("/api/ollama/route", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,15 +83,15 @@ export function UploadSection() {
           issues: [
             {
               category: "Grammar Issues",
-              items: parsed.grammarIssues.map((issue: any) => `${issue.quote} — ${issue.explanation}`),
+              items: parsed.grammarIssues.map((issue: any) => issue.description),
             },
             {
               category: "Ambiguity Issues",
-              items: parsed.ambiguityIssues.map((issue: any) => `${issue.quote} — ${issue.explanation}`),
+              items: parsed.ambiguityIssues.map((issue: any) => issue.description),
             },
             {
               category: "Compliance Issues",
-              items: parsed.complianceIssues.map((issue: any) => `${issue.quote} — ${issue.explanation}`),
+              items: parsed.complianceIssues.map((issue: any) => issue.description),
             },
           ].filter((section) => section.items.length > 0),
         };
