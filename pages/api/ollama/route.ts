@@ -39,39 +39,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ]
     }
 
-    ONLY return valid JSON — no explanations or commentary. Do not wrap in markdown or triple backticks. Do not include anything else outside of the JSON.
+    ONLY return valid JSON that includes all listed components. 
+    Keep explanations brief. Do not leave any fields missing.
+    Do not wrap in markdown or triple backticks. Do not include anything else outside of the JSON.
 
     Text to review:
     """${text}"""
     `;
 
-    // Call Ollama API (local)
+    // Call OpenRouter API
     const response = await axios.post(
-      'http://localhost:11434/api/chat',
+      'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'llama3.2', // or another model that responds well to structured JSON
+        model: 'meta-llama/llama-3.1-8b-instruct',
         messages: [
           {
             role: 'user',
-            content: "Text to review:" + text + "Analyze the document and return a JSON format. Your analysis should include complianceScore between 60 and 100, grammarIssues, ambiguityIssues and complianceIssues feilds.",
-          }
+            content: prompt,
+          },
         ],
-        stream: false,
-        format: 'json',
-        options: { temperature: 0 },
       },
       {
         headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, // store your key in .env.local
           'Content-Type': 'application/json',
         },
       }
     );
     
-
     const result = response.data;
-    const modelOutput = result.message.content;;
+    console.log("Full Response: ", result);
+    const modelOutput = result.choices?.[0]?.message?.content ?? '';
     console.log("Model Output: ", modelOutput);
-    console.log("Full Ollama Response:", response.data);
 
     
 

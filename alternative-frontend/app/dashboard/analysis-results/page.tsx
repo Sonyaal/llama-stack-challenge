@@ -7,22 +7,33 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 
-interface ComplianceIssue {
-  type: string
-  description: string
+interface Issue {
+  quote: string
+  explanation: string
 }
 
 export default function AnalysisResultsPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
-  const [score] = useState(92)
+  const [analysisData, setAnalysisData] = useState<{
+    complianceScore: number
+    grammarIssues: Issue[]
+    ambiguityIssues: Issue[]
+    complianceIssues: Issue[]
+  } | null>(null)
 
   useEffect(() => {
-    // Simulate loading time for analysis
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 1000)
-
+    const stored = localStorage.getItem("analysisResults")
+    console.log("Analysis: ", stored);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        setAnalysisData(parsed)
+      } catch (err) {
+        console.error("❌ Failed to parse analysisResults:", err)
+      }
+    }
+    const timer = setTimeout(() => setLoading(false), 1000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -30,34 +41,7 @@ export default function AnalysisResultsPage() {
     router.push("/dashboard")
   }
 
-  const grammarIssues: ComplianceIssue[] = [
-    {
-      type: "grammar",
-      description:
-        "The document is well-structured and easy to read, but there are a few instances of missing articles (e.g., 'a' or 'the') that could be improved for clarity.",
-    },
-    {
-      type: "grammar",
-      description:
-        "Some sentences are wordy or contain unnecessary words, which can make them harder to understand. For example, the sentence 'I certify that: I accept all the declarations above namely the Owner-Builder Declaration, Workers' Compensation Declaration, Asbestos Removal Declaration / Lead Hazard Warning, and Final Declaration;' could be condensed for better readability.",
-    },
-  ]
-  
-  const ambiguityIssues: ComplianceIssue[] = [
-    {
-      type: "ambiguity",
-      description:
-        "Some sections of the document are unclear or open to interpretation. For example, the section 'I certify that notification of asbestos removal is either not applicable or has been submitted to the AQMD or EPA as per section 19827.5 of the Health and Safety Code.' could be clarified with more specific language.",
-    },
-    {
-      type: "ambiguity",
-      description:
-        "The document assumes a certain level of knowledge about building codes and regulations, which may not be familiar to all readers. For example, the phrase 'lead safe construction practices' is not explicitly defined in the document.",
-    },
-  ]
-  
-
-  if (loading) {
+  if (loading || !analysisData) {
     return (
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
@@ -95,7 +79,7 @@ export default function AnalysisResultsPage() {
           <div className="flex justify-center mb-8">
             <div className="bg-green-50 rounded-full px-8 py-6 text-center">
               <div className="text-sm text-green-700 font-medium">Compliance Score</div>
-              <div className="text-4xl font-bold text-green-600">{score}/100</div>
+              <div className="text-4xl font-bold text-green-600">{analysisData.complianceScore}/100</div>
             </div>
           </div>
 
@@ -103,30 +87,28 @@ export default function AnalysisResultsPage() {
             <CardHeader className="bg-gray-100">
               <CardTitle className="text-xl">Compliance Issues</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Grammar Issues</h3>
-                  <ul className="space-y-4 list-disc pl-6">
-                    {grammarIssues.map((issue, index) => (
-                      <li key={`grammar-${index}`} className="text-gray-800">
-                        {issue.description}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Ambiguity Issues</h3>
-                  <ul className="space-y-4 list-disc pl-6">
-                    {ambiguityIssues.map((issue, index) => (
-                      <li key={`ambiguity-${index}`} className="text-gray-800">
-                        {issue.description}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+            <CardContent className="pt-6 space-y-8">
+              {[
+                { title: "Grammar Issues", key: "grammarIssues" },
+                { title: "Ambiguity Issues", key: "ambiguityIssues" },
+                { title: "Compliance Issues", key: "complianceIssues" },
+              ].map(({ title, key }) => {
+                const issues = analysisData[key as keyof typeof analysisData] as Issue[]
+                return (
+                  <div key={key}>
+                    <h3 className="text-lg font-semibold mb-4">{title}</h3>
+                    <ul className="space-y-4 list-disc pl-6">
+                      {issues.map((issue, i) => (
+                        <li key={`${key}-${i}`} className="text-gray-800">
+                          <span className="font-medium">"{issue.quote}"</span>
+                          <br />
+                          <span className="text-sm text-gray-700">{issue.explanation}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
             </CardContent>
           </Card>
 

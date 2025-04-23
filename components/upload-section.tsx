@@ -52,11 +52,12 @@ export function UploadSection() {
     setError(null)
 
     try {
-      const formData = new FormData()
-      formData.append("pdf", file)
+      const formData = new FormData();
+      formData.append("pdf", file);
 
       // PDF parsing
-      const text = await extractTextFromPDF(file)
+      const text = await extractTextFromPDF(file);
+      console.log("Text:",text);
 
       // Send API call
       const response = await fetch("/api/ollama/route", {
@@ -83,15 +84,15 @@ export function UploadSection() {
           issues: [
             {
               category: "Grammar Issues",
-              items: parsed.grammarIssues.map((issue: any) => issue.description),
+              items: parsed.grammarIssues.map((issue: any) => issue.explanation),
             },
             {
               category: "Ambiguity Issues",
-              items: parsed.ambiguityIssues.map((issue: any) => issue.description),
+              items: parsed.ambiguityIssues.map((issue: any) => issue.explanation),
             },
             {
               category: "Compliance Issues",
-              items: parsed.complianceIssues.map((issue: any) => issue.description),
+              items: parsed.complianceIssues.map((issue: any) => issue.explanation),
             },
           ].filter((section) => section.items.length > 0),
         };
